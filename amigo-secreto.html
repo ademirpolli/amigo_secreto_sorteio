@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amigo Secreto</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f1fa;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  .container {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 4px 15px #0002;
+  }
+  h1 { text-align: center; color: #7041a6; }
+  input, button {
+    width: 100%;
+    padding: 12px;
+    margin: 6px 0;
+    box-sizing: border-box;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+  input { border: 1px solid #ccc; }
+  button {
+    border: none;
+    background: #7041a6;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover { background: #593285; }
+  li {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  #resultado {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f4f1fa;
+    border-radius: 10px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎁 Amigo Secreto</h1>
+
+  <input id="nome" placeholder="Digite o nome do participante">
+  <button onclick="adicionar()">Adicionar participante</button>
+
+  <ul id="lista"></ul>
+
+  <button onclick="sortear()">Realizar sorteio</button>
+
+  <div id="resultado">
+    <p>O resultado aparecerá aqui.</p>
+  </div>
+</div>
+
+<script>
+let participantes = [];
+let sorteio = {};
+let revelados = new Set();
+
+function adicionar() {
+  const campo = document.getElementById("nome");
+  const nome = campo.value.trim();
+
+  if (!nome) return alert("Digite um nome.");
+  if (participantes.includes(nome))
+    return alert("Esse participante já foi adicionado.");
+
+  participantes.push(nome);
+  campo.value = "";
+  atualizarLista();
+}
+
+function atualizarLista() {
+  document.getElementById("lista").innerHTML =
+    participantes.map(nome => `<li>${nome}</li>`).join("");
+}
+
+function sortear() {
+  if (participantes.length < 2)
+    return alert("Adicione pelo menos 2 participantes.");
+
+  let amigos;
+  let tentativas = 0;
+
+  do {
+    amigos = [...participantes];
+    for (let i = amigos.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [amigos[i], amigos[j]] = [amigos[j], amigos[i]];
+    }
+    tentativas++;
+  } while (
+    amigos.some((nome, i) => nome === participantes[i]) &&
+    tentativas < 1000
+  );
+
+  if (amigos.some((nome, i) => nome === participantes[i]))
+    return alert("Não foi possível sortear. Tente novamente.");
+
+  sorteio = {};
+  participantes.forEach((nome, i) => {
+    sorteio[nome] = amigos[i];
+  });
+
+  revelados.clear();
+  mostrarResultados();
+}
+
+function mostrarResultados() {
+  const resultado = document.getElementById("resultado");
+
+  resultado.innerHTML = `
+    <h3>Resultados do sorteio</h3>
+    ${participantes.map(nome => `
+      <div style="margin:12px 0">
+        <button onclick="revelar('${nome.replace(/'/g, "\\'")}')">
+          Revelar amigo de ${nome}
+        </button>
+        <p id="revelacao-${participantes.indexOf(nome)}"></p>
+      </div>
+    `).join("")}
+  `;
+}
+
+function revelar(nome) {
+  const indice = participantes.indexOf(nome);
+  const campo = document.getElementById(`revelacao-${indice}`);
+
+  if (revelados.has(nome)) {
+    campo.textContent = "Resultado já revelado.";
+    return;
+  }
+
+  campo.textContent = `${nome}, seu amigo secreto é: ${sorteio[nome]}!`;
+  revelados.add(nome);
+}
+</script>
+</body>
+</html>
